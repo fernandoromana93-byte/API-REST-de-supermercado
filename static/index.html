@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Góndola · Inventario del supermercado</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M2 6h20l8 10-8 10H2z' fill='%23ffd23f'/%3E%3Ccircle cx='8' cy='16' r='2.5' fill='%230f4c45'/%3E%3C/svg%3E">
+<style>
+  @font-face { font-family: "Barlow Condensed"; font-weight: 700; font-display: swap; src: url(/static/fonts/barlow-condensed-700.woff2) format("woff2"); }
+  @font-face { font-family: "Barlow Condensed"; font-weight: 800; font-display: swap; src: url(/static/fonts/barlow-condensed-800.woff2) format("woff2"); }
+  @font-face { font-family: "DM Sans"; font-weight: 400 700; font-display: swap; src: url(/static/fonts/dm-sans.woff2) format("woff2"); }
+
+  :root {
+    --pine: #0f4c45; --pine-dark: #0a3732; --piso: #e8eeea; --papel: #fff; --tinta: #1d2b28; --suave: #566660; --linea: #cdd7d1;
+    --tag: #ffd23f; --ok: #1f7a44; --poco: #96600a; --agotado: #c23a16;
+    --display: "Barlow Condensed", "Arial Narrow", Impact, sans-serif;
+    --texto: "DM Sans", "Segoe UI", system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--piso); color: var(--tinta); font: 400 1rem/1.5 var(--texto); }
+  :focus-visible { outline: 3px solid var(--tag); outline-offset: 2px; }
+  main :focus-visible, dialog :focus-visible { outline-color: var(--pine); }
+
+  /* Botones */
+  .btn { display: inline-flex; align-items: center; padding: 10px 16px; border: 1.5px solid transparent; border-radius: 6px; font: 700 .95rem var(--texto); cursor: pointer; text-decoration: none; white-space: nowrap; }
+  .btn:hover { filter: brightness(.93); }
+  .btn.amarillo { background: var(--tag); color: var(--pine-dark); }
+  .btn.claro { background: var(--papel); color: var(--pine); }
+  .btn.fantasma { border-color: rgba(255,255,255,.5); color: #fff; }
+  .btn.fantasma:hover { background: rgba(255,255,255,.12); filter: none; }
+  .btn.pine { background: var(--pine); color: #fff; }
+  .btn.suave { background: var(--papel); border-color: var(--linea); color: var(--tinta); }
+
+  /* Cabecera */
+  .cabecera { background: var(--pine); color: #fff; }
+  .cabecera > div { max-width: 1100px; margin: 0 auto; padding: 14px 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; }
+  .marca { display: flex; align-items: center; gap: 12px; color: #fff; text-decoration: none; line-height: 1; }
+  .marca i { width: 34px; height: 26px; background: radial-gradient(circle at 8px 50%, var(--pine) 3px, transparent 3.5px), var(--tag); clip-path: polygon(0 0, 76% 0, 100% 50%, 76% 100%, 0 100%); }
+  .marca b { display: block; font: 800 1.9rem/1 var(--display); letter-spacing: .01em; }
+  .marca small { display: block; margin-top: 3px; font-size: .78rem; opacity: .85; }
+  #buscar { flex: 1 1 320px; max-width: 560px; display: flex; gap: 8px; }
+  #q { flex: 1; min-width: 0; padding: 10px 12px 10px 40px; border: 0; border-radius: 6px; font: inherit; color: var(--tinta);
+       background: var(--papel) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' fill='none' stroke='%23566660' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='8' cy='8' r='6'/%3E%3Cpath d='m13 13 4 4'/%3E%3C/svg%3E") no-repeat 13px 50%; }
+  .acciones-cab { display: flex; gap: 8px; margin-left: auto; }
+
+  /* Resumen */
+  main { max-width: 1100px; margin: 0 auto; padding: 28px 16px 8px; }
+  .resumen { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 14px 24px; }
+  h1 { margin: 0; font: 700 clamp(2.1rem, 5vw, 2.9rem)/1 var(--display); color: var(--pine); }
+  .enlace { padding: 0; margin-top: 6px; border: 0; background: none; color: var(--pine); font: 600 .95rem var(--texto); text-decoration: underline; cursor: pointer; }
+  .cifras { display: flex; flex-wrap: wrap; margin: 0; }
+  .cifras div { padding: 0 20px; border-left: 1px solid var(--linea); }
+  .cifras div:first-child { padding-left: 0; border-left: 0; }
+  .cifras dt { font-size: .82rem; color: var(--suave); }
+  .cifras dd { margin: 0; font: 700 1.9rem/1.1 var(--display); font-variant-numeric: tabular-nums; }
+
+  /* Pasillos: carril en el techo y letrero colgante */
+  .pasillo { position: relative; margin-top: 34px; padding-top: 20px; border-top: 5px solid #bcc8c1; }
+  .letrero { position: relative; display: inline-flex; align-items: baseline; gap: 12px; margin-bottom: 16px; padding: 6px 20px 8px; background: var(--c); color: #fff; border-radius: 4px; }
+  .letrero::before, .letrero::after { content: ""; position: absolute; top: -20px; width: 3px; height: 20px; background: #7f8d87; }
+  .letrero::before { left: 16px; } .letrero::after { right: 16px; }
+  .letrero h2 { margin: 0; font: 700 1.65rem/1.1 var(--display); }
+  .letrero span { font-size: .85rem; opacity: .92; }
+  .entra .letrero { transform-origin: 50% -20px; animation: cuelga 1.4s cubic-bezier(.3,.6,.4,1) both; animation-delay: calc(var(--i) * 150ms); }
+  @keyframes cuelga { 0% { transform: rotate(-6deg); } 25% { transform: rotate(3.5deg); } 50% { transform: rotate(-1.8deg); } 75% { transform: rotate(.7deg); } 100% { transform: none; } }
+
+  /* Etiquetas de góndola */
+  .estante { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 205px), 1fr)); gap: 16px; }
+  .tag { position: relative; display: flex; flex-direction: column; min-height: 158px; padding: 30px 14px 0; background: var(--papel); border-radius: 4px; overflow: hidden; box-shadow: 0 1px 0 var(--linea), 0 8px 14px -10px rgba(15,76,69,.5); }
+  .tag::before { content: ""; position: absolute; top: 9px; left: 50%; width: 11px; height: 11px; margin-left: -5px; border-radius: 50%; background: var(--piso); box-shadow: inset 0 1px 2px rgba(0,0,0,.3); }
+  .tag h3 { margin: 0; font: 700 1.02rem/1.25 var(--texto); }
+  .pie { display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; margin: auto -14px 0 0; padding-top: 14px; }
+  .stock { flex: 1; padding-bottom: 13px; font-size: .84rem; font-weight: 700; }
+  .stock .barra { height: 4px; margin-top: 6px; max-width: 90px; background: var(--piso); border-radius: 2px; overflow: hidden; }
+  .stock .barra i { display: block; width: var(--w); height: 100%; background: currentColor; }
+  .ok .stock { color: var(--ok); } .poco .stock { color: var(--poco); } .agotado .stock { color: var(--agotado); }
+  .precio { padding: 7px 13px 6px 15px; background: var(--tag); border-top-left-radius: 12px; font: 800 2.05rem/1 var(--display); font-variant-numeric: tabular-nums; color: var(--pine-dark); }
+  .precio small { margin-right: 2px; font-size: 1.05rem; vertical-align: .55em; }
+  .agotado h3 { color: var(--suave); }
+  .agotado .precio { background: #dfe6e2; color: var(--suave); }
+
+  .vacio { margin-top: 34px; padding: 44px 16px; text-align: center; background: var(--papel); border: 2px dashed var(--linea); border-radius: 6px; }
+  .vacio p { margin: 0 0 6px; color: var(--suave); }
+  .vacio .vt { font: 700 1.6rem/1.2 var(--display); color: var(--tinta); }
+  .vacio .btn { margin-top: 14px; }
+
+  footer { width: calc(100% - 32px); max-width: 1068px; margin: 44px auto 0; padding: 20px 0 36px; display: flex; flex-wrap: wrap; gap: 8px 24px; border-top: 1px solid var(--linea); font-size: .9rem; color: var(--suave); }
+  footer a { color: var(--pine); font-weight: 600; }
+
+  /* Diálogo y aviso */
+  dialog { border: 0; border-radius: 10px; padding: 26px; width: min(440px, 92vw); color: var(--tinta); box-shadow: 0 24px 60px -20px rgba(10,55,50,.6); }
+  dialog[open] { animation: sube .2s ease-out; }
+  @keyframes sube { from { opacity: 0; transform: translateY(14px); } }
+  dialog::backdrop { background: rgba(10,55,50,.55); }
+  dialog h2 { margin: 0 0 16px; font: 700 1.9rem/1 var(--display); color: var(--pine); }
+  dialog label { display: block; margin-bottom: 14px; font-size: .9rem; font-weight: 600; }
+  dialog input { display: block; width: 100%; margin-top: 5px; padding: 10px 12px; border: 1.5px solid var(--linea); border-radius: 6px; font: 400 1rem var(--texto); color: var(--tinta); }
+  .par { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .moneda { position: relative; display: block; }
+  .moneda::before { content: "$"; position: absolute; left: 12px; bottom: 10px; color: var(--suave); }
+  .moneda input { padding-left: 26px; }
+  #errdlg { min-height: 1.4em; margin: 0 0 8px; color: var(--agotado); font-size: .9rem; font-weight: 600; }
+  .acciones { display: flex; justify-content: flex-end; gap: 8px; }
+  #toast { position: fixed; left: 50%; bottom: 24px; z-index: 10; max-width: min(92vw, 520px); padding: 12px 18px; border-radius: 8px; background: var(--pine-dark); color: #fff; font-weight: 600; box-shadow: 0 12px 30px -10px rgba(0,0,0,.5); opacity: 0; transform: translate(-50%, 16px); pointer-events: none; transition: opacity .25s, transform .25s; }
+  #toast.ver { opacity: 1; transform: translate(-50%, 0); }
+  #toast.error { background: var(--agotado); }
+
+  @media (max-width: 640px) { .acciones-cab { margin-left: 0; width: 100%; } .acciones-cab .btn { flex: 1; justify-content: center; } .marca small { display: none; } .cifras div { padding: 0 14px; } }
+  @media (prefers-reduced-motion: reduce) { .entra .letrero, dialog[open] { animation: none; } #toast { transition: none; } }
+</style>
+</head>
+<body>
+<header class="cabecera">
+  <div>
+    <a class="marca" href="/"><i aria-hidden="true"></i><span><b>Góndola</b><small>Inventario del supermercado</small></span></a>
+    <form id="buscar" role="search">
+      <input id="q" type="search" placeholder="Busca un producto" aria-label="Buscar producto por nombre" required>
+      <button class="btn claro">Buscar</button>
+    </form>
+    <div class="acciones-cab">
+      <button id="nuevo" type="button" class="btn amarillo">Agregar producto</button>
+      <a id="pdf" class="btn fantasma" target="_blank" rel="noopener">Exportar PDF</a>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="resumen">
+    <div>
+      <h1 id="titulo">Disponibles</h1>
+      <button id="volver" type="button" class="enlace" hidden>Volver a los disponibles</button>
+    </div>
+    <dl class="cifras">
+      <div><dt>Productos</dt><dd id="n-prod">0</dd></div>
+      <div><dt>Unidades</dt><dd id="n-uni">0</dd></div>
+      <div><dt>Valor del inventario</dt><dd id="n-valor">$0</dd></div>
+    </dl>
+  </div>
+  <div id="lista" aria-live="polite"></div>
+</main>
+
+<footer>
+  <span>API REST con enlaces HATEOAS</span>
+  <a href="/docs">Documentación Swagger</a>
+  <a href="/openapi.json">Especificación OpenAPI</a>
+</footer>
+
+<dialog id="dlg" aria-labelledby="dlg-t">
+  <form id="form" method="dialog">
+    <h2 id="dlg-t">Agregar producto</h2>
+    <label>Nombre <input name="nombre" required maxlength="100" autocomplete="off"></label>
+    <label>Categoría <input name="categoria" list="cats" required maxlength="50" autocomplete="off"></label>
+    <div class="par">
+      <label>Precio (COP) <span class="moneda"><input name="precio" type="number" min="1" step="any" inputmode="decimal" required></span></label>
+      <label>Unidades en stock <input name="stock" type="number" min="0" step="1" required></label>
+    </div>
+    <p id="errdlg" role="alert"></p>
+    <div class="acciones">
+      <button type="button" id="cancelar" class="btn suave">Cancelar</button>
+      <button class="btn pine">Guardar producto</button>
+    </div>
+  </form>
+</dialog>
+<datalist id="cats"></datalist>
+<div id="toast" role="status"></div>
+
+<script>
+const $ = s => document.querySelector(s);
+const num = (n, d = 0) => new Intl.NumberFormat("es-CO", { maximumFractionDigits: d }).format(n);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const COLORES = { "lácteos": "#1f5fa8", "despensa": "#8a5a1c", "frutas y verduras": "#2d7d46", "panadería": "#b84f12", "aseo": "#0e7c86", "bebidas": "#6a3fa0", "carnes": "#a32a3b" };
+const colorDe = c => COLORES[c.toLowerCase()] ?? `hsl(${[...c].reduce((h, x) => (h * 31 + x.charCodeAt(0)) % 360, 7)} 50% 32%)`;
+
+let links = {};          // enlaces HATEOAS de la última respuesta: la UI no construye URLs a mano
+let busqueda = null;     // texto buscado, o null si se muestran los disponibles
+let primera = true;      // el letrero "cuelga" solo en la primera carga
+const categorias = new Set();
+
+function aviso(msg, error = false) {
+  const t = $("#toast");
+  t.textContent = msg; t.className = "ver" + (error ? " error" : "");
+  clearTimeout(aviso.t); aviso.t = setTimeout(() => (t.className = ""), 4200);
+}
+
+async function api(url, opts) {
+  const r = await fetch(url, opts);
+  if (r.ok) return r.json();
+  const { detail } = await r.json().catch(() => ({}));
+  throw new Error(Array.isArray(detail) ? detail.map(d => `${d.loc.at(-1)}: ${d.msg}`).join(". ") : detail || r.statusText);
+}
+
+const tag = p => {
+  const e = p.stock === 0 ? "agotado" : p.stock < 10 ? "poco" : "ok";
+  const txt = e === "agotado" ? "Agotado" : e === "poco" ? (p.stock === 1 ? "Queda 1" : `Quedan ${p.stock}`) : `${p.stock} en stock`;
+  return `<article class="tag ${e}"><h3>${esc(p.nombre)}</h3><div class="pie">
+    <div class="stock"><span>${txt}</span><div class="barra"><i style="--w:${Math.min(100, p.stock * 2)}%"></i></div></div>
+    <div class="precio"><small>$</small>${num(p.precio, 2)}</div></div></article>`;
+};
+
+const vacio = () => `<div class="vacio">
+  <p class="vt">${busqueda ? `No encontramos “${esc(busqueda)}”` : "Todavía no hay productos disponibles"}</p>
+  <p>${busqueda ? "Revisa la ortografía o agrégalo al inventario." : "Agrega el primero para empezar."}</p>
+  <button class="btn pine" data-nuevo="${esc(busqueda ?? "")}">${busqueda ? `Agregar “${esc(busqueda)}”` : "Agregar producto"}</button></div>`;
+
+function pintar(d) {
+  const grupos = {};
+  for (const p of d.items) (grupos[p.categoria] ??= []).push(p);
+  Object.keys(grupos).forEach(c => categorias.add(c));
+  $("#cats").innerHTML = [...categorias].map(c => `<option value="${esc(c)}">`).join("");
+  $("#n-prod").textContent = num(d.total);
+  $("#n-uni").textContent = num(d.items.reduce((s, p) => s + p.stock, 0));
+  $("#n-valor").textContent = "$" + num(d.items.reduce((s, p) => s + p.precio * p.stock, 0));
+  $("#lista").innerHTML = Object.entries(grupos).sort(([a], [b]) => a.localeCompare(b, "es")).map(([cat, ps], i) => `
+    <section class="pasillo ${primera ? "entra" : ""}" style="--c:${colorDe(cat)};--i:${i}">
+      <div class="letrero"><h2>${esc(cat)}</h2><span>${ps.length} ${ps.length === 1 ? "producto" : "productos"}</span></div>
+      <div class="estante">${ps.map(tag).join("")}</div>
+    </section>`).join("") || vacio();
+  primera = false;
+}
+
+async function cargar(url, titulo, q = null) {
+  try {
+    const d = await api(url);
+    links = d._links; busqueda = q;
+    $("#pdf").href = links.reporte.href;
+    $("#titulo").textContent = titulo;
+    $("#volver").hidden = q === null;
+    pintar(d);
+  } catch (e) { aviso(e.message, true); }
+}
+
+const verTodos = () => { $("#q").value = ""; return cargar(links.todos?.href ?? "/productos", "Disponibles"); };
+
+function abrir(nombre = "") {
+  $("#form").reset(); $("#errdlg").textContent = "";
+  $("#form").nombre.value = nombre;
+  $("#dlg").showModal();
+}
+
+$("#buscar").onsubmit = e => {
+  e.preventDefault();
+  const q = $("#q").value.trim();
+  if (q) cargar(links.buscar.href.replace("{nombre}", encodeURIComponent(q)), `Resultados para “${q}”`, q);
+};
+$("#volver").onclick = verTodos;
+$("#nuevo").onclick = () => abrir();
+$("#lista").onclick = e => { const b = e.target.closest("[data-nuevo]"); if (b) abrir(b.dataset.nuevo); };
+$("#cancelar").onclick = () => $("#dlg").close();
+
+$("#form").onsubmit = async e => {
+  e.preventDefault();
+  const f = Object.fromEntries(new FormData(e.target));
+  try {
+    const p = await api(links.crear.href, {
+      method: links.crear.method,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...f, precio: +f.precio, stock: +f.stock }),
+    });
+    $("#dlg").close();
+    aviso(`Producto guardado: ${p.nombre}.` + (p.stock === 0 ? " Está agotado, así que solo aparece al buscarlo." : ""));
+    verTodos();
+  } catch (err) { $("#errdlg").textContent = err.message; }
+};
+
+cargar("/productos", "Disponibles");
+</script>
+</body>
+</html>
